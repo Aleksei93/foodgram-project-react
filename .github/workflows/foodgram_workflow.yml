@@ -90,6 +90,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE_SERVER }}
           script: |
             cd ~/infrastructure/foodgram/
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
