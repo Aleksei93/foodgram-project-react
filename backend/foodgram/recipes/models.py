@@ -9,7 +9,8 @@ User = get_user_model()
 
 
 class BaseModel(models.Model):
-    """Базовая модель"""
+    """Базовая модель."""
+
     created = models.DateTimeField(
         verbose_name='Дата создания', auto_now_add=True)
 
@@ -19,6 +20,7 @@ class BaseModel(models.Model):
 
 class Ingredient(models.Model):
     """Модель ингридиентов."""
+
     name = models.CharField(
         'Название ингридиента', max_length=200)
     measurement_unit = models.CharField(
@@ -39,6 +41,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     """Модель тэгов."""
+
     name = models.CharField(
         'Имя тега', max_length=150, unique=True)
     color = models.CharField(
@@ -62,6 +65,7 @@ class Tag(models.Model):
 
 class Recipe(BaseModel):
     """Модель рецептов."""
+
     author = models.ForeignKey(
         User, verbose_name='Автор рецепта', on_delete=models.CASCADE,
         related_name='recipes', )
@@ -90,6 +94,7 @@ class Recipe(BaseModel):
 
 class IngredientRecipeRelation(models.Model):
     """Модель игридиенты-рецепты."""
+
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, verbose_name='Рецепт')
     ingredient = models.ForeignKey(
@@ -112,6 +117,7 @@ class IngredientRecipeRelation(models.Model):
 
 class Subscription(BaseModel):
     """Модель подписки."""
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscriptions',
         verbose_name='Пользователь')
@@ -137,6 +143,7 @@ class Subscription(BaseModel):
 
 class Favorite(BaseModel):
     """Модель избранное."""
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='favorites',
         verbose_name='Пользователь')
@@ -161,6 +168,7 @@ class Favorite(BaseModel):
 
 class ShoppingCart(BaseModel):
     """Модель корзина покупок."""
+    
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='shopping_cart',
         verbose_name='Пользователь')
