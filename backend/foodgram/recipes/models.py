@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from sorl.thumbnail import ImageField
-
 from core.images import upload_to
 
 User = get_user_model()
@@ -168,7 +167,7 @@ class Favorite(BaseModel):
 
 class ShoppingCart(BaseModel):
     """Модель корзина покупок."""
-    
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='shopping_cart',
         verbose_name='Пользователь')
