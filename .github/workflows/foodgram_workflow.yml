@@ -92,10 +92,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE_SERVER }}
           script: |
+            cd ~/infrastructure/foodgram/
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
-            sudo docker-compose stop
-            sudo docker-compose rm -f backend frontend
             rm -f .env
             touch .env
             echo 'ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}' >> .env
