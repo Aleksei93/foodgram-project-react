@@ -44,3 +44,4 @@ volumes:
   frontend_value:
   media_value:
   logs_value:
+
