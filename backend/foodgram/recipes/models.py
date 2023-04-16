@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from sorl.thumbnail import ImageField
+
 from core.images import upload_to
 
 User = get_user_model()
