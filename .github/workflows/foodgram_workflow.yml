@@ -95,4 +95,5 @@ jobs:
             cd ~/infrastructure/foodgram/
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
+            rm -f .env
 
