@@ -9,7 +9,7 @@ services:
       - ./.env
 
   frontend:
-    image: alexei93/foodgram-frontend:v2.16.04.2023	
+    image: alexei93/foodgram-frontend:latest
     volumes:
       - frontend_value:/app/result_build/build/
 
@@ -44,4 +44,3 @@ volumes:
   frontend_value:
   media_value:
   logs_value:
-
