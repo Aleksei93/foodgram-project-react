@@ -1,4 +1,3 @@
-
 # praktikum_new_diplom
 
 Выполнена проверка работы API через Postman.
