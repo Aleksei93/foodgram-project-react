@@ -1,0 +1,165 @@
+name: Foodgram main workflow
+
+on: push
+
+jobs:
+  tests:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: | 
+        python -m pip install --upgrade pip 
+        pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
+        pip install -r backend/foodgram/requirements.txt 
+    - name: Test with flake8 and django tests
+      run: |
+        cd ./backend/foodgram
+        python -m flake8
+        python manage.py test
+  build_backend_and_push_to_docker_hub:
+    name: Build backend and push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    needs: tests
+    if: always() && github.ref == 'refs/heads/master' && needs.tests.result == 'success'
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: ./backend/foodgram/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
+
+  build_frontend_and_push_to_docker_hub:
+    name: Build frontend and push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    needs: build_backend_and_push_to_docker_hub
+    if: always() && github.ref == 'refs/heads/master' && needs.build_backend_and_push_to_docker_hub.result == 'success'
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: ./frontend/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
+
+  deploy:
+    name: Deploy image on production server
+    runs-on: ubuntu-latest
+    needs: build_frontend_and_push_to_docker_hub
+    if: always() && github.ref == 'refs/heads/master' && needs.build_frontend_and_push_to_docker_hub.result == 'success'
+
+    steps:
+      - name: executing remote ssh commands to deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/infrastructure/foodgram/
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
+            sudo docker-compose stop
+            sudo docker-compose rm -f backend frontend
+            rm -f .env
+            touch .env
+            echo 'ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}' >> .env
+            echo 'DEBUG=0' >> .env
+            echo 'SECRET_KEY=${{ secrets.SECRET_KEY }}' >> .env
+            echo 'DB_ENGINE=${{ secrets.DB_ENGINE }}' >> .env
+            echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env
+            echo 'POSTGRES_USER=${{ secrets.POSTGRES_USER }}' >> .env
+            echo 'POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}' >> .env
+            echo 'DB_HOST=${{ secrets.DB_HOST }}' >> .env
+            echo 'DB_PORT=${{ secrets.DB_PORT }}' >> .env
+            sudo docker-compose up -d
+  send_message:
+    name: Send tg-message on success
+    runs-on: ubuntu-latest
+    needs: [tests, deploy, build_frontend_and_push_to_docker_hub, build_backend_and_push_to_docker_hub]
+
+    steps:
+      - name: send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.workflow }} из репозитория ${{ github.repository }} выполнен успешно!
+            
+            Статусы задач:
+            - Tests: ${{ needs.tests.result }}
+            - Build backend: ${{ needs.build_backend_and_push_to_docker_hub.result }}
+            - Build frontend: ${{ needs.build_frontend_and_push_to_docker_hub.result }}
+            - Deploy: ${{ needs.deploy.result }}
+  send_message_if_fail:
+    name: Send tg-message on job fail
+    runs-on: ubuntu-latest
+    needs: [tests, build_backend_and_push_to_docker_hub, build_frontend_and_push_to_docker_hub, deploy]
+    if: always() && (needs.tests.result == 'failure' || needs.build_backend_and_push_to_docker_hub.result == 'failure' || needs.build_frontend_and_push_to_docker_hub.result == 'failure' || needs.deploy.result == 'failure')
+
+    steps:
+      - name: send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Возникли ошибки при выполнении ${{ github.workflow }} в репозитории ${{ github.repository }}!
+            
+            Статусы задач:
+            - Tests: ${{ needs.tests.result }}
+            - Build backend: ${{ needs.build_backend_and_push_to_docker_hub.result }}
+            - Build frontend: ${{ needs.build_frontend_and_push_to_docker_hub.result }}
+            - Deploy: ${{ needs.deploy.result }}
+  send_message_after_tests:
+    name: Send tg-message after tests-job (if not main branch)
+    runs-on: ubuntu-latest
+    needs: [tests]
+    if: always() && github.ref != 'refs/heads/master'
+
+    steps:
+      - name: send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            Задача tests ${{ github.workflow }} из репозитория ${{ github.repository }} выполнена
+            
+            Статусы задачи tests: ${{ needs.tests.result }}
