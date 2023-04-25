@@ -8,12 +8,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY', default='very-secret-key@#RFesf')
 
-
 DEBUG = int(os.environ.get('DEBUG', '0'))
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', 'localhost 127.0.0.1').split(' ')
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -64,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-
+# Database
 DATABASES = {
     'default': {
         'ENGINE': os.getenv(
@@ -77,7 +75,7 @@ DATABASES = {
     }
 }
 
-
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -93,25 +91,25 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+# Internationalization
 LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static_backend/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-
+# Media
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
+# Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
 
-
+# DRF
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -119,13 +117,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10,
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
+        # disabled actions
         'activation': ['rest_framework.permissions.IsAdminUser'],
         'password_reset': ['rest_framework.permissions.IsAdminUser'],
         'password_reset_confirm': ['rest_framework.permissions.IsAdminUser'],
@@ -142,13 +141,16 @@ DJOSER = {
         'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-        'user_list': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'user_create': 'api.users.serializers.CustomUserCreateSerializer',
+        'user': 'api.users.serializers.CustomUserSerializer',
+        'user_list': 'api.users.serializers.CustomUserSerializer',
+        'current_user': 'api.users.serializers.CustomUserSerializer',
     },
     'HIDE_USERS': False
 }
 
+FIXTURE_DIRS = (
+    os.path.join(BASE_DIR, 'api/tests/fixtures/'),
+)
 
 SITE_NAME = 'Продуктовый помощник'

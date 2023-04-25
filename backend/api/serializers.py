@@ -1,28 +1,18 @@
 import base64
 import mimetypes
 
-import djoser.serializers
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.settings import api_settings
 
+from api.ingridients.serializers import IngredientRecipeRelationSerializer
+from api.tags.serializers import TagSerializer
+from api.users.serializers import CustomUserSerializer
 from recipes.models import (Favorite, Ingredient, IngredientRecipeRelation,
-                            Recipe, ShoppingCart, Subscription, Tag)
+                            Recipe, ShoppingCart, Subscription)
 
 User = get_user_model()
-
-
-class CustomUserCreateSerializer(djoser.serializers.UserCreateSerializer):
-    id = serializers.PrimaryKeyRelatedField(
-        required=False, queryset=User.objects.all())
-
-    class Meta:
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'password')
-        model = User
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -40,18 +30,6 @@ class AuthorSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'is_subscribed')
         model = User
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('id', 'name', 'measurement_unit')
-        model = Ingredient
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = Tag
 
 
 class RecipeSerializerList(serializers.ModelSerializer):
@@ -84,18 +62,6 @@ class RecipeSerializerList(serializers.ModelSerializer):
         model = Recipe
 
 
-class IngredientRecipeRelationSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(
-        source='ingredient', queryset=Ingredient.objects.all())
-    name = serializers.StringRelatedField(source='ingredient.name')
-    measurement_unit = serializers.StringRelatedField(
-        source='ingredient.measurement_unit')
-
-    class Meta:
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-        model = IngredientRecipeRelation
-
-
 class RecipeCreateIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient', queryset=Ingredient.objects.all())
@@ -117,25 +83,6 @@ class ImageBase64Field(serializers.ImageField):
             data = ContentFile(image_data, name=f'temp.{extension}')
 
         return super().to_internal_value(data)
-
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
-
-    def get_is_subscribed(self, obj):
-        if 'request' not in self.context:
-            return False
-
-        if not self.context['request'].user.is_authenticated:
-            return False
-
-        return Subscription.objects.filter(
-            author=obj, user=self.context['request'].user).exists()
-
-    class Meta:
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'is_subscribed')
-        model = User
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -233,31 +180,3 @@ class RecipeShortSerilizer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'image', 'name', 'cooking_time')
         model = Recipe
-
-
-class SubscriptionListSerializer(serializers.ModelSerializer):
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(
-        source='recipes.count', read_only=True)
-    is_subscribed = serializers.SerializerMethodField()
-
-    def get_recipes(self, obj):
-        recipes_limit = int(self.context['request'].GET.get(
-            'recipes_limit', api_settings.PAGE_SIZE))
-
-        user = get_object_or_404(User, pk=obj.pk)
-        recipes = Recipe.objects.filter(author=user)[:recipes_limit]
-
-        return RecipeShortSerilizer(recipes, many=True).data
-
-    def get_is_subscribed(self, obj):
-        if not self.context['request'].user.is_authenticated:
-            return False
-
-        return Subscription.objects.filter(
-            author=obj, user=self.context['request'].user).exists()
-
-    class Meta:
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes_count', 'recipes')
-        model = User

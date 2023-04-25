@@ -2,30 +2,19 @@ from django.db.models import Q
 from django_filters import rest_framework as django_filters
 from rest_framework import filters
 
-from recipes.models import Recipe
+from recipes.models import Recipe, Tag
 
 
 class RecipeFilter(django_filters.FilterSet):
-    tags = django_filters.CharFilter(
-        field_name='tags__slug', method='filter_tags', lookup_expr='in')
+    tags = django_filters.ModelMultipleChoiceFilter(
+        queryset=Tag.objects.all(),
+        field_name="tags__slug",
+        to_field_name="slug",
+    )
     is_in_shopping_cart = django_filters.BooleanFilter(
         field_name='is_in_shopping_cart', method='filter_is_in_shopping_cart')
     is_favorited = django_filters.BooleanFilter(
         field_name='is_favorited', method='filter_is_favorited')
-
-    def filter_tags(self, queryset, name, value):
-        values = self.request.GET.getlist(key='tags', default=[])
-
-        if not value:
-            return queryset
-
-        queries = [Q(tags__slug=value) for value in values]
-
-        query = queries.pop()
-        for item in queries:
-            query |= item
-
-        return queryset.filter(query).distinct()
 
     def __is_something(self, queryset, name, value, related_field):
         if self.request.user.is_anonymous:
@@ -42,7 +31,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('author',)
+        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
 
 class IngredientsSearchFilter(filters.SearchFilter):

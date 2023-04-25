@@ -3,39 +3,17 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView, Response
 
-from api.recipes.filters import RecipeFilter
-from api.pagination import CustomPageNumberPagination
-from api.permissions import RecipePermissions
-from api.serializers import (RecipeCreateUpdateSerializer,
-                             RecipeSerializerList, RecipeShortSerilizer)
 from api.manager.serializers import SubscriptionListSerializer
+from api.serializers import RecipeShortSerilizer
 from core import pdf
 from recipes.models import (Favorite, IngredientRecipeRelation,
                             Recipe, ShoppingCart, Subscription)
 
 User = get_user_model()
-
-
-class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    permission_classes = (RecipePermissions,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = RecipeFilter
-    pagination_class = CustomPageNumberPagination
-
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return RecipeSerializerList
-
-        return RecipeCreateUpdateSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
 
 class SubscriptionsManageView(APIView):
