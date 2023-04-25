@@ -1,9 +1,11 @@
 import djoser.serializers
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from recipes.models import (Subscription)
 
 User = get_user_model()
+
 
 class CustomUserCreateSerializer(djoser.serializers.UserCreateSerializer):
     id = serializers.PrimaryKeyRelatedField(
