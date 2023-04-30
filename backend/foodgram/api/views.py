@@ -8,7 +8,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView, Response
 
-from api.recipes.filters import RecipeFilter
+from api.filters import RecipeFilter
 from api.pagination import CustomPageNumberPagination
 from api.permissions import RecipePermissions
 from api.serializers import (RecipeCreateUpdateSerializer,

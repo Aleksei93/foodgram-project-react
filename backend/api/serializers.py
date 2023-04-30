@@ -3,7 +3,7 @@ import mimetypes
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from rest_framework import serializers
 
 from api.ingridients.serializers import IngredientRecipeRelationSerializer
@@ -111,15 +111,19 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
 
         obj = Recipe.objects.create(**validated_data)
-        obj.save()
 
         obj.tags.set(tags)
 
         for ingredient in ingredients:
-            IngredientRecipeRelation.objects.create(
-                recipe=obj, ingredient=ingredient['ingredient'],
-                amount=ingredient['amount']
-            ).save()
+            try:
+                IngredientRecipeRelation.objects.create(
+                    recipe=obj, ingredient=ingredient['ingredient'],
+                    amount=ingredient['amount']
+                )
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    {'errors': "Ингредиенты не могут повторяться."}
+                )
 
         return obj
 

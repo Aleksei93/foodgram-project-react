@@ -34,8 +34,12 @@ class SubscriptionsManageView(APIView):
                 {'errors': 'Вы уже подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST)
 
-        obj = Subscription(author=author, user=user)
+        try:
+            obj = Subscription(author=author, user=user)
+        except ValueError as e:
+            return Response({'errors': 'Ошибка данных!'}, status=status.HTTP_400_BAD_REQUEST)
         obj.save()
+
         serializer = SubscriptionListSerializer(
             author, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
