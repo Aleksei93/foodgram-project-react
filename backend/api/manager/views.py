@@ -37,7 +37,8 @@ class SubscriptionsManageView(APIView):
         try:
             obj = Subscription(author=author, user=user)
         except ValueError as e:
-            return Response({'errors': 'Ошибка данных!'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'errors': 'Ошибка данных!'},
+                            status=status.HTTP_400_BAD_REQUEST)
         obj.save()
 
         serializer = SubscriptionListSerializer(

@@ -14,7 +14,7 @@ services:
       - frontend_value:/app/result_build/build/
 
   backend:
-    image: alexei93/foodgram-backend:latest
+    build: ../backend
     domainname: foodgram.org
     restart: always
     volumes:
