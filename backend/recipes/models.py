@@ -48,7 +48,7 @@ class Tag(models.Model):
         'Имя тега',
         max_length=150,
         unique=True
-        )
+    )
 
     color = models.CharField(
         'Цвет',
@@ -61,12 +61,12 @@ class Tag(models.Model):
                 message='Неправильный формат цвета'
                 ),
             )
-        )
+    )
     slug = models.SlugField(
         'Slug',
         help_text='Введите slug тега',
         unique=True
-        )
+    )
 
     class Meta:
         verbose_name = 'тег'
@@ -85,7 +85,7 @@ class Recipe(BaseModel):
         verbose_name='Автор рецепта',
         on_delete=models.CASCADE,
         related_name='recipes',
-        )
+    )
     image = ImageField(
         'Картинка', upload_to=upload_to, blank=False)
     name = models.CharField(
@@ -97,7 +97,7 @@ class Recipe(BaseModel):
         validators=(MinValueValidator(
             1,
             message='Мин. время приготовления 1 минута'),)
-        )
+    )
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes')
     ingredients = models.ManyToManyField(

@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from api.manager.views import (SubscriptionsManageView, ListFollowViewSet)
+from api.manager.views import SubscriptionsManageView, ListFollowViewSet
 
 
 subscriptions_urlpatterns = [
