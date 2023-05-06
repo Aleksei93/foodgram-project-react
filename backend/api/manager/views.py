@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView, Response
 
 from api.manager.serializers import SubscriptionListSerializer
-from api.serializers import RecipeShortSerilizer
+from api.recipes.serializers import RecipeShortSerilizer
 from core import pdf
 from recipes.models import (Favorite, IngredientRecipeRelation,
                             Recipe, ShoppingCart, Subscription)

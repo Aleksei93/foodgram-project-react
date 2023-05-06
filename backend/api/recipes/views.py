@@ -1,15 +1,12 @@
-from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
 from api.filters import RecipeFilter
 from api.pagination import CustomPageNumberPagination
 from api.permissions import RecipePermissions
-from api.serializers import (RecipeCreateUpdateSerializer,
-                             RecipeSerializerList)
+from api.recipes.serializers import (RecipeCreateUpdateSerializer,
+                                     RecipeSerializerList)
 from recipes.models import Recipe
-
-User = get_user_model()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

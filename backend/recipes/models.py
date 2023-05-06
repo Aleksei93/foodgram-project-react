@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
+from django.db.models import F, Q
+from django.core.exceptions import ValidationError
 from sorl.thumbnail import ImageField
 
 from core.images import upload_to
@@ -43,16 +45,28 @@ class Tag(models.Model):
     """Модель тэгов."""
 
     name = models.CharField(
-        'Имя тега', max_length=150, unique=True)
+        'Имя тега',
+        max_length=150,
+        unique=True
+        )
+
     color = models.CharField(
-        'Цвет', help_text=(
-            'Введите код цвета в шестнадцетиричном формате (#ABCDEF)'),
-        max_length=7, validators=(
+        'Цвет',
+        help_text=('Введите код цвета в шестнадцетиричном формате (#ABCDEF)'),
+        max_length=7,
+        validators=(
             RegexValidator(
-                regex='^#[a-fA-F0-9]{6}$', code='wrong_hex_code',
-                message='Неправильный формат цвета'),))
+                regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                code='wrong_hex_code',
+                message='Неправильный формат цвета'
+                ),
+            )
+        )
     slug = models.SlugField(
-        'Slug', help_text='Введите slug тега', unique=True)
+        'Slug',
+        help_text='Введите slug тега',
+        unique=True
+        )
 
     class Meta:
         verbose_name = 'тег'
@@ -67,8 +81,11 @@ class Recipe(BaseModel):
     """Модель рецептов."""
 
     author = models.ForeignKey(
-        User, verbose_name='Автор рецепта', on_delete=models.CASCADE,
-        related_name='recipes', )
+        User,
+        verbose_name='Автор рецепта',
+        on_delete=models.CASCADE,
+        related_name='recipes',
+        )
     image = ImageField(
         'Картинка', upload_to=upload_to, blank=False)
     name = models.CharField(
@@ -76,7 +93,11 @@ class Recipe(BaseModel):
     text = models.TextField(
         'Описание')
     cooking_time = models.PositiveSmallIntegerField(
-        'Время приготовления', validators=(MinValueValidator(1),))
+        'Время приготовления',
+        validators=(MinValueValidator(
+            1,
+            message='Мин. время приготовления 1 минута'),)
+        )
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes')
     ingredients = models.ManyToManyField(
@@ -112,7 +133,7 @@ class IngredientRecipeRelation(models.Model):
         ]
 
     def __str__(self):
-        return '{} ({})'.format(self.ingredient.name, self.recipe.name)
+        return f'{self.ingredient.name}, {self.recipe.name}'
 
 
 class Subscription(BaseModel):
@@ -120,10 +141,14 @@ class Subscription(BaseModel):
 
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscriptions',
-        verbose_name='Пользователь')
+        verbose_name='Пользователь',)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscripters',
         verbose_name='Автор')
+
+    def clean(self):
+        if self.author.id == self.user.id:
+            raise ValidationError("Подписка на самого себя запрещена")
 
     class Meta:
         ordering = ('id',)
@@ -131,14 +156,16 @@ class Subscription(BaseModel):
         verbose_name_plural = 'подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=('author', 'user'), name='Unique subscription')
+                fields=('author', 'user'),
+                name='Unique subscription',
+            ),
+            models.CheckConstraint(
+                check=~Q(user=F('author')),
+                name='no_self_subscribe')
         ]
 
     def __str__(self):
-        return '\'{} {}\' подписан на \'{} {}\''.format(
-            self.user.first_name, self.user.last_name, self.author.first_name,
-            self.author.last_name
-        )
+        return f'{self.user.first_name} подписан на {self.author.first_name}'
 
 
 class Favorite(BaseModel):
@@ -161,9 +188,8 @@ class Favorite(BaseModel):
         ]
 
     def __str__(self):
-        return 'Рецепт \'{}\' в избранном \'{} {}\''.format(
-            self.recipe.name, self.user.first_name, self.user.last_name
-        )
+        return (f'{self.recipe.name}, {self.user.first_name},'
+                f'{self.user.last_name}')
 
 
 class ShoppingCart(BaseModel):
@@ -186,6 +212,5 @@ class ShoppingCart(BaseModel):
         ]
 
     def __str__(self):
-        return 'Рецепт \'{}\' в списке покупок \'{} {}\''.format(
-            self.recipe.name, self.user.first_name, self.user.last_name
-        )
+        return (f'{self.recipe.name}, {self.user.first_name},'
+                f'{self.user.last_name}')

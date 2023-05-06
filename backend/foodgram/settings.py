@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY', default='very-secret-key@#RFesf')
 
-DEBUG = int(os.environ.get('DEBUG', '0'))
+DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', 'localhost 127.0.0.1').split(' ')
@@ -125,7 +125,6 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {
         # disabled actions
-        'activation': ['rest_framework.permissions.IsAdminUser'],
         'password_reset': ['rest_framework.permissions.IsAdminUser'],
         'password_reset_confirm': ['rest_framework.permissions.IsAdminUser'],
         'username_reset': ['rest_framework.permissions.IsAdminUser'],

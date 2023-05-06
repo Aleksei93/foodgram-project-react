@@ -19,11 +19,11 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
 class IngredientRecipeRelationAdminInline(admin.TabularInline):
     model = IngredientRecipeRelation
-    extra = 3
+    exrta = 3
 
 
 class RecipeAdmin(AdminImageMixin, admin.ModelAdmin):
-    list_display = ('name', 'author')
+    list_display = ('name', 'author', 'favorite_count')
     search_fields = ('name', 'author__username', 'author__last_name',
                      'tags__name', 'tags__slug', 'author__first_name')
     inlines = (IngredientRecipeRelationAdminInline,)
@@ -34,18 +34,12 @@ class RecipeAdmin(AdminImageMixin, admin.ModelAdmin):
                 'name', 'author', 'image', 'tags'
             )
         }),
-        ('Информация', {
-            'fields': (
-                'favorite_count', 'shoppingcart_count'
-            )
-        }),
         ('Приготовление', {
             'fields': (
                 'text', 'cooking_time',
             )
         }),
     )
-    readonly_fields = ('favorite_count', 'shoppingcart_count')
 
     def favorite_count(self, obj):
         return obj.favorites.count()
