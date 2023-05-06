@@ -211,4 +211,3 @@ class ShoppingCart(BaseModel):
     def __str__(self):
         return (f'{self.recipe.name}, {self.user.first_name},'
                 f'{self.user.last_name}')
-
