@@ -58,10 +58,7 @@ class Tag(models.Model):
             RegexValidator(
                 regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
                 code='wrong_hex_code',
-                message='Неправильный формат цвета'
-                ),
-            )
-    )
+                message='Неправильный формат цвета'),))
     slug = models.SlugField(
         'Slug',
         help_text='Введите slug тега',
