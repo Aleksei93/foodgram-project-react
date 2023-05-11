@@ -2,8 +2,6 @@
 
 ![example workflow](https://github.com/Aleksei93/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
-# praktikum_new_diplom
-
 ## Описание проекта
 
 Продуктовый помощник. Проект позволяет создавать рецептты, просматривать рецепты других пользователей и формировать список ингридиентов для покупки из выбранных рецептов. 
